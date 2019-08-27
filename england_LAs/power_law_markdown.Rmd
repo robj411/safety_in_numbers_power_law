@@ -1,0 +1,213 @@
+---
+title: "power_law_markdown"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stringr)
+library(dplyr)
+setwd('~/overflow_dropbox/safety_in_numbers_power_law/england_LAs/')
+
+summary_counts <- readRDS('data/england_power_law_data.Rds')
+
+car_mod <- glm(log(Car)~log(Pedal.Cycles),data=summary_counts)
+summary_counts$logcarpred <- car_mod$fitted.values
+summary_counts$logcarresidual <- log(summary_counts$Car) - summary_counts$logcarpred
+```
+
+## Data
+
+First let's look at the basic log-log relationship between number of cyclist injuries and distance travelled (over 11 years and across 148 areas):
+
+```{r basic}
+par(mfrow=c(1,3))
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist injuries')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_ksi_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist KSI')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_fatal_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist fatalities')
+```
+
+
+
+And now let's look at the difference between all the areas and the London areas (in pink):
+
+```{r london}
+london <- subset(summary_counts,Region_Name=='London')
+not_london <- subset(summary_counts,Region_Name!='London')
+par(mfrow=c(1,3))
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist injuries')
+points(log(london$Pedal.Cycles),log(london$whw_bike),pch=16,col='hotpink')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_ksi_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist KSI')
+points(log(london$Pedal.Cycles),log(london$whw_ksi_bike),pch=16,col='hotpink')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_fatal_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist fatalities')
+points(log(london$Pedal.Cycles),log(london$whw_fatal_bike),pch=16,col='hotpink')
+```
+
+
+And now let's look at the rates (the numbers per distance travelled):
+
+Note that in general the areas of London have a higher rate. This might be because they are more dense.
+
+```{r rate}
+par(mfrow=c(1,3))
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist injuries per distance cycled')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_ksi_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist KSI per distance cycled')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_fatal_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist fatalities per distance cycled')
+```
+
+
+
+
+```{r london rate}
+par(mfrow=c(1,3))
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist injuries per distance cycled')
+points(log(london$Pedal.Cycles),log(london$whw_bike/london$Pedal.Cycles),pch=16,col='hotpink')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_ksi_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist KSI per distance cycled')
+points(log(london$Pedal.Cycles),log(london$whw_ksi_bike/london$Pedal.Cycles),pch=16,col='hotpink')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_fatal_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist fatalities per distance cycled')
+points(log(london$Pedal.Cycles),log(london$whw_fatal_bike/london$Pedal.Cycles),pch=16,col='hotpink')
+```
+
+```{r london rate}
+hist(summary_counts$dens)
+high_density <- subset(summary_counts,dens>20)
+par(mfrow=c(1,3))
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist injuries')
+points(log(high_density$Pedal.Cycles),log(high_density$whw_bike),pch=16,col='hotpink')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_ksi_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist KSI')
+points(log(high_density$Pedal.Cycles),log(high_density$whw_ksi_bike),pch=16,col='hotpink')
+plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_fatal_bike),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist fatalities')
+points(log(high_density$Pedal.Cycles),log(high_density$whw_fatal_bike),pch=16,col='hotpink')
+```
+
+
+
+## Analysis
+
+# cycle distance only as a predictor, for all, london and not london, for all, ksi, and fatal.
+
+Using one predictor:
+
+```{r coefficient: all}
+model1 <- glm(whw_bike~log(Pedal.Cycles),data=summary_counts,family=poisson(),offset=log(Pedal.Cycles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles),data=summary_counts,family=poisson(),offset=log(Pedal.Cycles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles),data=summary_counts,family=poisson(),offset=log(Pedal.Cycles))
+c(model1$coefficients[2],model2$coefficients[2],model3$coefficients[2])+1
+```
+
+```{r coefficient: london}
+model1 <- glm(whw_bike~log(Pedal.Cycles),data=london,family=poisson(),offset=log(Pedal.Cycles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles),data=london,family=poisson(),offset=log(Pedal.Cycles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles),data=london,family=poisson(),offset=log(Pedal.Cycles))
+c(model1$coefficients[2],model2$coefficients[2],model3$coefficients[2])+1
+```
+
+```{r coefficient: not london}
+model1 <- glm(whw_bike~log(Pedal.Cycles),data=not_london,family=poisson(),offset=log(Pedal.Cycles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles),data=not_london,family=poisson(),offset=log(Pedal.Cycles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles),data=not_london,family=poisson(),offset=log(Pedal.Cycles))
+c(model1$coefficients[2],model2$coefficients[2],model3$coefficients[2])+1
+```
+
+# cycle distance and motor distance as predictors, for all, london and not london, for all, ksi, and fatal.
+
+Using two predictors:
+
+```{r coefficients: all}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
+
+```{r coefficients: london}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
+
+```{r coefficients: not london}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=not_london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=not_london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles),data=not_london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
+
+# cycle distance and car residual distance as predictors, for all, london and not london, for all, ksi, and fatal.
+
+Here we used the residual car travel - that is, the amount more or less than we expected based on cycle travel.
+
+```{r coefficients with residual: all}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+logcarresidual,data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+logcarresidual,data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+logcarresidual,data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
+
+```{r coefficients with residual: london}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+logcarresidual,data=london,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+logcarresidual,data=london,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+logcarresidual,data=london,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
+
+```{r coefficients with residual: not london}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+logcarresidual,data=not_london,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+logcarresidual,data=not_london,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+logcarresidual,data=not_london,family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
+
+
+# area, cycle distance and motor distance as predictors, for all, london and not london, for all, ksi, and fatal.
+
+Using three predictors. Here it starts to go quite wrong. We get negative values. We might do better if we could supply priors.
+
+```{r 3 coefficients: all}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=summary_counts,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
+
+```{r 3 coefficients: london}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
+
+```{r 3 coefficients: not_london}
+model1 <- glm(whw_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=not_london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model2 <- glm(whw_ksi_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=not_london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+model3 <- glm(whw_fatal_bike~log(Pedal.Cycles)+log(All.Motor.Vehicles)+LA_Name,data=not_london,family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+coef_summary <- data.frame(rbind(model1$coefficients[2:3],model2$coefficients[2:3],model3$coefficients[2:3])+1)
+rownames(coef_summary) <- c('all','KSI','fatal')
+coef_summary$sum <- rowSums(coef_summary)
+coef_summary
+```
