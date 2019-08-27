@@ -261,33 +261,8 @@ text(subset(summary_counts,Year==2011&LA_Name=='Cambridgeshire')$LA_Name,
      x=log(subset(summary_counts,Year==2011&LA_Name=='Cambridgeshire')$population),
      y=log(subset(summary_counts,Year==2011&LA_Name=='Cambridgeshire')$count))
 
+superset <- summary_counts
 
-
-
-
-la_road_length_sheets <- read.ods('~/overflow_dropbox/ITHIM/InjuryModel/spatial/rdl0202.ods')
-keep_sheets <- c(5,7,9,11,13,15,17,19,21,23,24)
-la_road_by_year <- list()
-for(i in 1:11){
-  la_road_by_year[[i]] <- la_road_length_sheets[[keep_sheets[12-i]]][7:159,c(1,2,3,7,13,ifelse(i%in%c(9,10),19,21))]
-  names(la_road_by_year[[i]]) <- c('code','region','LA','Motorway','A','B')
-  la_road_by_year[[i]] <- la_road_by_year[[i]][-1,]
-  la_road_by_year[[i]]$code[which(la_road_by_year[[i]]=='E08000037')] <- 'E08000020'
-  la_road_by_year[[i]]$code[which(la_road_by_year[[i]]=='E06000057')] <- 'E06000048'
-  for(j in 4:6) la_road_by_year[[i]][[j]] <- as.numeric(gsub(',','',la_road_by_year[[i]][[j]]))
-  print(la_road_by_year[[i]]$LA[!la_road_by_year[[i]]$code %in% names(code_to_la)])
-  la_road_by_year[[i]] <- la_road_by_year[[i]][la_road_by_year[[i]]$code %in% names(code_to_la),]
-  la_road_by_year[[i]]$Year <- i+2004
-}
-
-road_data <- do.call(rbind,la_road_by_year)
-
-summary_counts$code <- sapply(summary_counts$LA_Name,function(x)la_to_code[[as.character(x)]])
-superset <- left_join(summary_counts,road_data,by=c('code','Year'))
-superset$total_road <- superset$Motorway + superset$A + superset$B
-superset$AB <- superset$A + superset$B
-summary(glm(log(total_road)~log(population),data=superset,offset=log(population)))
-superset$cyclist_density <- superset$Pedal.Cycles/superset$AB
 
 london <- subset(superset, region=='London')
 
