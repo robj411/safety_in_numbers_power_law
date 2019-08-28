@@ -69,7 +69,7 @@ plot(log(summary_counts$Pedal.Cycles),log(summary_counts$whw_fatal_bike/summary_
 points(log(london$Pedal.Cycles),log(london$whw_fatal_bike/london$Pedal.Cycles),pch=16,col='hotpink')
 ```
 
-```{r london rate}
+```{r london}
 hist(summary_counts$dens)
 high_density <- subset(summary_counts,dens>20)
 par(mfrow=c(1,3))
@@ -250,3 +250,12 @@ coef_summary$sum <- rowSums(coef_summary)
 coef_summary
 ```
 
+```{r london density rate}
+par(mfrow=c(1,3))
+plot(log(summary_counts$Pedal.Cycles/summary_counts$AB),log(summary_counts$whw_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist injuries per distance cycled')
+points(log(london$Pedal.Cycles/london$AB),log(london$whw_bike/london$Pedal.Cycles),pch=16,col='hotpink')
+plot(log(summary_counts$Pedal.Cycles/summary_counts$AB),log(summary_counts$whw_ksi_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist KSI per distance cycled')
+points(log(london$Pedal.Cycles/london$AB),log(london$whw_ksi_bike/london$Pedal.Cycles),pch=16,col='hotpink')
+plot(log(summary_counts$Pedal.Cycles/summary_counts$AB),log(summary_counts$whw_fatal_bike/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab='Cyclist fatalities per distance cycled')
+points(log(london$Pedal.Cycles/london$AB),log(london$whw_fatal_bike/london$Pedal.Cycles),pch=16,col='hotpink')
+```

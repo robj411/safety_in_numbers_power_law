@@ -71,16 +71,16 @@ if(file.exists('results/results100.Rds')){
   results100 <- readRDS('results/results100.Rds')
 }else{
   results100$count <- 0
-  for(j in 1:nrow(inputs))
+  for(j in 1:nrow(results100))
     ## calling order = WINDOW_WIDTH,WINDOW_HEIGHT,STEP_SIZE,PROBABILITY,cyclists,motorists,showwindow
     results100$count[j] <- main_function(as.integer(results100[j,3]*stepsize),as.integer(results100[j,3]*stepsize),as.integer(stepsize),as.double(1),as.integer(results100[j,1]),as.integer(results100[j,2]),'F')
   saveRDS(inputs,'results/results100.Rds')
 }
 
-q1 <- sapply(unique(results100$windowsize),function(x)quantile(subset(results100,windowsize==x)$collisions,0.05))
-q9 <- sapply(unique(results100$windowsize),function(x)quantile(subset(results100,windowsize==x)$collisions,0.95))
+q1 <- sapply(unique(results100$windowsize),function(x)quantile(subset(results100,windowsize==x)$count,0.05))
+q9 <- sapply(unique(results100$windowsize),function(x)quantile(subset(results100,windowsize==x)$count,0.95))
 {x11(width=11); par(mar=c(5,5,1,1))
-plot(window_positions^2,sapply(unique(results100$windowsize),function(x)mean(subset(results100,windowsize==x)$collisions)),col='navyblue',
+plot(window_positions^2,sapply(unique(results100$windowsize),function(x)mean(subset(results100,windowsize==x)$count)),col='navyblue',
      frame=F,cex=1.5,pch=15,xlab='Frame size',ylab='Number of collisions',ylim=range(c(q1,q9)),cex.lab=1.5,cex.axis=1.5,xaxt='n')
 for(i in 1:length(q1)) lines(c(unique(results100$windowsize)[i],unique(results100$windowsize)[i])^2,c(q1[i],q9[i]),col='navyblue')
 abline(h=pred100,col='hotpink',lwd=2.5,xaxt='n')
@@ -103,14 +103,14 @@ if(file.exists('results/results50100.Rds')){
   results50100 <- readRDS('results/results50100.Rds')
 }else{
   results50100$count <- 0
-  for(j in 1:nrow(inputs)) 
+  for(j in 1:nrow(results50100)) 
     ## calling order = WINDOW_WIDTH,WINDOW_HEIGHT,STEP_SIZE,PROBABILITY,cyclists,motorists,showwindow
     results50100$count[j] <- main_function(as.integer(results50100[j,3]*stepsize),as.integer(results50100[j,3]*stepsize),as.integer(stepsize),as.double(1),as.integer(results50100[j,1]),as.integer(results50100[j,2]),'F')
   saveRDS(inputs,'results/results50100.Rds')
 }
 
 par(mar=c(5,5,1,1))
-plot(results50100$cyclists,results50100$collisions,col='navyblue',xlim=c(0,max(results50100$cyclists)),ylim=c(0,max(results50100$collisions)),
+plot(results50100$cyclists,results50100$count,col='navyblue',xlim=c(0,max(results50100$cyclists)),ylim=c(0,max(results50100$count)),
      frame=F,pch=15,xlab='Number of cyclists',ylab='Number of collisions',cex.lab=1.5,cex.axis=1.5)
 lines(aug_seq,pred50100,col='hotpink',lwd=3)
 legend(pch=c(15,NA),lwd=c(NA,2.5),bty='n',legend=c('Simulation','Prediction'),x=0,y=190,col=c('navyblue','hotpink'),cex=1.25)
@@ -130,14 +130,14 @@ if(file.exists('results/results15050.Rds')){
   results15050 <- readRDS('results/results15050.Rds')
 }else{
   results15050$count <- 0
-  for(j in 1:nrow(inputs))
+  for(j in 1:nrow(results15050))
     ## calling order = WINDOW_WIDTH,WINDOW_HEIGHT,STEP_SIZE,PROBABILITY,cyclists,motorists,showwindow
     results15050$count[j] <- main_function(as.integer(results15050[j,3]*stepsize),as.integer(results15050[j,3]*stepsize),as.integer(stepsize),as.double(1),as.integer(results15050[j,1]),as.integer(results15050[j,2]),'F')
   saveRDS(inputs,'results/results15050.Rds')
 }
 
 par(mar=c(5,5,1,1))
-plot(results15050$motorists,results15050$collisions,col='navyblue',xlim=c(0,max(results15050$motorists)),ylim=c(0,max(results15050$collisions)),
+plot(results15050$motorists,results15050$count,col='navyblue',xlim=c(0,max(results15050$motorists)),ylim=c(0,max(results15050$count)),
      frame=F,pch=15,xlab='Number of motorists',ylab='Number of collisions',cex.lab=1.5,cex.axis=1.5)
 lines(c(15,short_seq,120),pred15050,col='hotpink',lwd=3)
 legend(pch=c(15,NA),lwd=c(NA,2.5),bty='n',legend=c('Simulation','Prediction'),x=0,y=160,col=c('navyblue','hotpink'),cex=1.25)
@@ -322,7 +322,7 @@ q9 <- sapply(unique(inputs$windowsize),function(x)quantile(subset(inputs,windows
 inputsdouble <- inputs
 mod <- glm(count~log(motorists)+log(cyclists),family=poisson(),data=inputsdouble,offset=0.5*log(motorists)+0.5*log(cyclists))
 coef(summary(mod))
-inputs$pred <- mod$fitted.values
+#inputs$pred <- mod$fitted.values
 
 #################################################################
 mod <- glm(count~log(motorists)+log(cyclists),family=poisson(),data=rbind(inputs,inputsdouble),offset=0.5*log(motorists)+0.5*log(cyclists))
