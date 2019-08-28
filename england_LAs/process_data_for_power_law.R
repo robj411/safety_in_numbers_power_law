@@ -614,6 +614,15 @@ for(i in 1:length(unique(superset$code))){
   superset$ruralpercent[superset$code==cd] <- pc/100
 }
   
+
+saveRDS(superset,'data/england_power_law_data.Rds')
+
+
+
+summary_counts <- readRDS('data/england_power_law_data.Rds')
+
+
+
 lad_to_county <- read.csv('~/overflow_dropbox/ITHIM/InjuryModel/LAD_to_county.csv')
 
   
