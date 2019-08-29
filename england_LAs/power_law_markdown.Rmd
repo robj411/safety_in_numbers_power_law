@@ -1,10 +1,10 @@
 ---
-title: "power_law_markdown"
+title: "Road traffic injuries: regression and power law"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F)
 library(stringr)
 library(dplyr)
 setwd('~/overflow_dropbox/safety_in_numbers_power_law/england_LAs/')
@@ -24,9 +24,11 @@ ylabs <- c('injuries','KSI','fatalities')
 hist(summary_counts$ruralpercent,breaks=50)
 ```
 
-## Data
+# Data
 
-First let's look at the basic log-log relationship between number of cyclist injuries and distance travelled (over 11 years and across 148 areas):
+First let's look at the basic log-log relationship between number of cyclist injuries and distance travelled (over 11 years and across 148 areas).
+
+These plots are descriptive: we're expecting to see a positive correlation, i.e. the more cycling there is, the more injuries to cyclists there are.
 
 ```{r basic}
 par(mfrow=c(1,3))
@@ -35,7 +37,9 @@ for(i in 1:3) plot(log(summary_counts$Pedal.Cycles),log(summary_counts[[inj_cols
 
 
 
-And now let's look at the difference between all the areas and the urban areas (in pink):
+And now let's look at the difference between all the areas and the urban areas (in pink).
+
+Note that in general the areas of urban have a higher rate. This might be because they are more dense.
 
 ```{r urban}
 par(mfrow=c(1,3))
@@ -46,9 +50,11 @@ for(i in 1:3) {
 ```
 
 
-And now let's look at the rates (the numbers per distance travelled):
+And now let's look at the rates (the numbers per distance travelled).
 
-Note that in general the areas of urban have a higher rate. This might be because they are more dense.
+These plots should be more diagnostic: we should expect to see a negative correlation if the more cycling there is, the fewer injuries there are per cyclist.
+
+Note that there are fewer events for serious injuries and fewer still fatalities. This results in the straight diagonal lines, and indicate that the definition of rate is not useful here.
 
 ```{r rate}
 par(mfrow=c(1,3))
@@ -68,11 +74,9 @@ for(i in 1:3) {
 
 
 
-## Analysis : numbers
+# Analysis : numbers
 
-# cycle distance only as a predictor, for all, urban and rural, for all, ksi, and fatal.
-
-Using one predictor:
+### Cycle distance only as a predictor, for all, urban and rural, for all, ksi, and fatal.
 
 ```{r coefficient: one predictor}
 coef_summary <- data.frame(all=c(),urban=c(),rural=c())
@@ -88,11 +92,10 @@ coef_summary
 ```
 
 
-# cycle distance and motor distance as predictors, for all, urban and rural, for all, ksi, and fatal.
+### Cycle distance and motor distance as predictors, for all, urban and rural, for all, ksi, and fatal.
 
-Using two predictors:
-
-```{r coefficients: all}
+All: 
+```{r 2 coefficients: all}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
     frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(All.Motor.Vehicles)')
@@ -105,7 +108,9 @@ colnames(coef_summary) <- c('pedal','motor','sum')
 coef_summary
 ```
 
-```{r coefficients: urban}
+Urban: 
+
+```{r 2 coefficients: urban}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
     frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(All.Motor.Vehicles)')
@@ -118,7 +123,9 @@ colnames(coef_summary) <- c('pedal','motor','sum')
 coef_summary
 ```
 
-```{r coefficients: rural}
+Rural: 
+
+```{r 2 coefficients: rural}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
     frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(All.Motor.Vehicles)')
@@ -131,53 +138,57 @@ colnames(coef_summary) <- c('pedal','motor','sum')
 coef_summary
 ```
 
-# cycle distance and car residual distance as predictors, for all, urban and rural, for all, ksi, and fatal.
+### Cycle distance and car residual distance as predictors, for all, urban and rural, for all, ksi, and fatal.
 
 Here we used the residual car travel - that is, the amount more or less than we expected based on cycle travel.
 
+All:
 ```{r coefficients with residual: all}
-coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
+coef_summary <- data.frame(pedal=c(),motor=c())
   for(i in 1:3){
     frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+logcarresidual')
     mod <- glm(as.formula(frml),data=datasets[[1]],family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
-    coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
 rownames(coef_summary) <- ylabs
-colnames(coef_summary) <- c('pedal','motor residual','sum')
+colnames(coef_summary) <- c('pedal','motor residual')
 coef_summary
 ```
 
+Urban:
+
 ```{r coefficients with residual: urban}
-coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
+coef_summary <- data.frame(pedal=c(),motor=c())
   for(i in 1:3){
     frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+logcarresidual')
     mod <- glm(as.formula(frml),data=datasets[[2]],family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
-    coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
 rownames(coef_summary) <- ylabs
-colnames(coef_summary) <- c('pedal','motor residual','sum')
+colnames(coef_summary) <- c('pedal','motor residual')
 coef_summary
 ```
 
+Rural:
+
 ```{r coefficients with residual: rural}
-coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
+coef_summary <- data.frame(pedal=c(),motor=c())
   for(i in 1:3){
     frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+logcarresidual')
     mod <- glm(as.formula(frml),data=datasets[[3]],family=poisson(),offset=log(Pedal.Cycles)+logcarresidual)
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
-    coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
 rownames(coef_summary) <- ylabs
-colnames(coef_summary) <- c('pedal','motor residual','sum')
+colnames(coef_summary) <- c('pedal','motor residual')
 coef_summary
 ```
 
 
-# area name, cycle distance and motor distance as predictors, for all, urban and rural, for all, ksi, and fatal.
+### Area name, cycle distance and motor distance as predictors, for all, urban and rural, for all, ksi, and fatal.
 
 Using three predictors. Here it starts to go quite wrong. We get negative values. We might do better if we could supply priors.
+
+All:
 
 ```{r 3 coefficients: all}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
@@ -192,6 +203,8 @@ colnames(coef_summary) <- c('pedal','motor','sum')
 coef_summary
 ```
 
+Urban:
+
 ```{r 3 coefficients: urban}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
@@ -204,6 +217,8 @@ rownames(coef_summary) <- ylabs
 colnames(coef_summary) <- c('pedal','motor','sum')
 coef_summary
 ```
+
+Rural:
 
 ```{r 3 coefficients: rural}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
@@ -219,11 +234,11 @@ coef_summary
 ```
 
 
-## Analysis : density
+# Analysis : density
 
-# cycle road distance density and motor road distance density as predictors, for all, urban and rural, for all, ksi, and fatal.
+### Cycle road distance density and motor road distance density as predictors, for all, urban and rural, for all, ksi, and fatal.
 
-Using two predictors:
+All:
 
 ```{r coefficients: all}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
@@ -238,6 +253,8 @@ colnames(coef_summary) <- c('pedal','motor','sum')
 coef_summary
 ```
 
+Urban:
+
 ```{r coefficients: urban}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
@@ -250,6 +267,8 @@ rownames(coef_summary) <- ylabs
 colnames(coef_summary) <- c('pedal','motor','sum')
 coef_summary
 ```
+
+Rural:
 
 ```{r coefficients: rural}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
@@ -264,7 +283,7 @@ colnames(coef_summary) <- c('pedal','motor','sum')
 coef_summary
 ```
 
-## visualisation : density
+# Visualisation : density
 
 There doesn't seem to be a clear relationship between density and injury, given our implementation of density as the total travel divided by the total road length.
 
