@@ -36,21 +36,25 @@ for(i in 1:3) plot(log(summary_counts$Pedal.Cycles),log(summary_counts[[inj_cols
 ```
 
 
+And now let's look at the difference between all the areas and the urban areas (in pink, defined as the areas with >99% of the population living in an urban area (city, town or minor conurbation) in the 2011 census).
 
-And now let's look at the difference between all the areas and the urban areas (in pink).
-
-Note that in general the areas of urban have a higher rate. This might be because they are more dense.
 
 ```{r urban}
 par(mfrow=c(1,3))
 for(i in 1:3) {
-  plot(log(summary_counts$Pedal.Cycles),log(summary_counts[[inj_cols[i]]]),pch=16,col='navyblue',xlab='Distance cycled',ylab=paste0('Cyclist ',ylabs[i]))
-  points(log(urban$Pedal.Cycles),log(urban[[inj_cols[i]]]),pch=16,col='hotpink')
+  plot(log(rural$Pedal.Cycles),log(rural[[inj_cols[i]]]),pch=16,col='navyblue',xlab='Distance cycled',ylab=paste0('Cyclist ',ylabs[i]))
+  points(log(urban$Pedal.Cycles),log(urban[[inj_cols[i]]]),pch=16,col='hotpink',cex=0.8)
 }
 ```
 
+So is it possible that we get the safety-in-numbers results as a result of having all high-density (urban) areas having lower levels of cycling? I.e., all the high-cycling places are rural and sparse? Yes: there is a relationship between total road length and total cycling, with urban areas having the shortest total road length (excepting the Isles of Scilly) and not the most total cycling.
 
-And now let's look at the rates (the numbers per distance travelled).
+```{r distance vs road length}
+plot(log(rural$Pedal.Cycles),log(rural$AB),pch=16,col='navyblue',xlab='Distance cycled',ylab='Total A+B road length')
+points(log(urban$Pedal.Cycles),log(urban$AB),pch=16,col='hotpink',cex=0.8)
+```
+
+Now let's look at the rates (the numbers per distance travelled).
 
 These plots should be more diagnostic: we should expect to see a negative correlation if the more cycling there is, the fewer injuries there are per cyclist.
 
@@ -67,8 +71,8 @@ for(i in 1:3) plot(log(summary_counts$Pedal.Cycles),log(summary_counts[[inj_cols
 ```{r urban rate}
 par(mfrow=c(1,3))
 for(i in 1:3) {
-  plot(log(summary_counts$Pedal.Cycles),log(summary_counts[[inj_cols[i]]]/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Distance cycled',ylab=paste0('Cyclist ',ylabs[i],' per distance cycled'))
-  points(log(urban$Pedal.Cycles),log(urban[[inj_cols[i]]]/urban$Pedal.Cycles),pch=16,col='hotpink')
+  plot(log(rural$Pedal.Cycles),log(rural[[inj_cols[i]]]/rural$Pedal.Cycles),pch=15,col='navyblue',xlab='Distance cycled',ylab=paste0('Cyclist ',ylabs[i],' per distance cycled'))
+  points(log(urban$Pedal.Cycles),log(urban[[inj_cols[i]]]/urban$Pedal.Cycles),pch=16,col='hotpink',cex=0.8)
 }
 ```
 
@@ -98,8 +102,8 @@ All:
 ```{r 2 coefficients: all}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
-    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(All.Motor.Vehicles)')
-    mod <- glm(as.formula(frml),data=datasets[[1]],family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(Car)')
+    mod <- glm(as.formula(frml),data=datasets[[1]],family=poisson(),offset=log(Pedal.Cycles)+log(Car))
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
     coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
@@ -113,8 +117,8 @@ Urban:
 ```{r 2 coefficients: urban}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
-    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(All.Motor.Vehicles)')
-    mod <- glm(as.formula(frml),data=datasets[[2]],family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(Car)')
+    mod <- glm(as.formula(frml),data=datasets[[2]],family=poisson(),offset=log(Pedal.Cycles)+log(Car))
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
     coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
@@ -128,8 +132,8 @@ Rural:
 ```{r 2 coefficients: rural}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
-    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(All.Motor.Vehicles)')
-    mod <- glm(as.formula(frml),data=datasets[[3]],family=poisson(),offset=log(Pedal.Cycles)+log(All.Motor.Vehicles))
+    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(Car)')
+    mod <- glm(as.formula(frml),data=datasets[[3]],family=poisson(),offset=log(Pedal.Cycles)+log(Car))
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
     coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
@@ -243,8 +247,8 @@ All:
 ```{r coefficients: all}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
-    frml <- paste0(inj_cols[i],'~log(cyclist_density)+log(motor_density)')
-    mod <- glm(as.formula(frml),data=datasets[[1]],family=poisson(),offset=log(cyclist_density)+log(motor_density)+log(AB))
+    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(Car)')
+    mod <- glm(as.formula(frml),data=datasets[[1]],family=poisson(),offset=log(Pedal.Cycles)+log(Car)-log(AB))
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
     coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
@@ -258,8 +262,8 @@ Urban:
 ```{r coefficients: urban}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
-    frml <- paste0(inj_cols[i],'~log(cyclist_density)+log(motor_density)')
-    mod <- glm(as.formula(frml),data=datasets[[2]],family=poisson(),offset=log(cyclist_density)+log(motor_density)+log(AB))
+    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(Car)')
+    mod <- glm(as.formula(frml),data=datasets[[2]],family=poisson(),offset=log(Pedal.Cycles)+log(Car)-log(AB))
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
     coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
@@ -273,8 +277,8 @@ Rural:
 ```{r coefficients: rural}
 coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
-    frml <- paste0(inj_cols[i],'~log(cyclist_density)+log(motor_density)')
-    mod <- glm(as.formula(frml),data=datasets[[3]],family=poisson(),offset=log(cyclist_density)+log(motor_density)+log(AB))
+    frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(Car)')
+    mod <- glm(as.formula(frml),data=datasets[[3]],family=poisson(),offset=log(Pedal.Cycles)+log(Car)-log(AB))
     coef_summary[i,1:2] <- mod$coefficients[2:3]+1
     coef_summary[i,3] <- sum(coef_summary[i,1:2])
   }
@@ -290,8 +294,8 @@ There doesn't seem to be a clear relationship between density and injury, given 
 ```{r urban density rate}
 par(mfrow=c(1,3))
 for(i in 1:3){
-  plot(log(summary_counts$Pedal.Cycles/summary_counts$AB),log(summary_counts[[inj_cols[i]]]/summary_counts$Pedal.Cycles),pch=16,col='navyblue',xlab='Cycle distance density',ylab=paste0('Cyclist ',ylabs[i],' per distance cycled'))
-  points(log(urban$Pedal.Cycles/urban$AB),log(urban[[inj_cols[i]]]/urban$Pedal.Cycles),pch=16,col='hotpink')
+  plot(log(rural$Pedal.Cycles/rural$AB),log(rural[[inj_cols[i]]]/rural$Pedal.Cycles),pch=16,col='navyblue',xlab='Cycle distance density',ylab=paste0('Cyclist ',ylabs[i],' per distance cycled'))
+  points(log(urban$Pedal.Cycles/urban$AB),log(urban[[inj_cols[i]]]/urban$Pedal.Cycles),pch=16,col='hotpink',cex=0.8)
 }
 ```
 
@@ -299,7 +303,7 @@ for(i in 1:3){
 ```{r urban density number}
 par(mfrow=c(1,3))
 for(i in 1:3){
-  plot(log(summary_counts$Pedal.Cycles/summary_counts$AB),log(summary_counts[[inj_cols[i]]]),pch=16,col='navyblue',xlab='Cycle distance density',ylab=paste0('Cyclist ',ylabs[i]))
-  points(log(urban$Pedal.Cycles/urban$AB),log(urban[[inj_cols[i]]]),pch=16,col='hotpink')
+  plot(log(rural$Pedal.Cycles/rural$AB),log(rural[[inj_cols[i]]]),pch=16,col='navyblue',xlab='Cycle distance density',ylab=paste0('Cyclist ',ylabs[i]))
+  points(log(urban$Pedal.Cycles/urban$AB),log(urban[[inj_cols[i]]]),pch=16,col='hotpink',cex=0.8)
 }
 ```
