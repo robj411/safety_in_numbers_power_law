@@ -329,6 +329,8 @@ mod <- glm(count~log(motorists)+log(cyclists),family=poisson(),data=rbind(inputs
 coef(summary(mod))
 mod <- glm(count~log(motorists)+log(cyclists)+windowsize,family=poisson(),data=rbind(inputs,inputsdouble),offset=0.5*log(motorists)+0.5*log(cyclists))
 coef(summary(mod))
+mod <- glm(count~log(motorists)+log(cyclists),family=poisson(),data=rbind(inputs,inputsdouble),offset=-log(windowsize))
+coef(summary(mod))
 
 
 

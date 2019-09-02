@@ -245,17 +245,19 @@ coef_summary
 All:
 
 ```{r coefficients: all}
-coef_summary <- data.frame(pedal=c(),motor=c(),sum=c())
+coef_summary <- data.frame(intercept=c(),pedal=c(),motor=c(),sum=c())
   for(i in 1:3){
     frml <- paste0(inj_cols[i],'~log(Pedal.Cycles)+log(Car)')
     mod <- glm(as.formula(frml),data=datasets[[1]],family=poisson(),offset=log(Pedal.Cycles)+log(Car)-log(AB))
-    coef_summary[i,1:2] <- mod$coefficients[2:3]+1
-    coef_summary[i,3] <- sum(coef_summary[i,1:2])
+    coef_summary[i,1] <- mod$coefficients[1]
+    coef_summary[i,2:3] <- mod$coefficients[2:3]+1
+    coef_summary[i,4] <- sum(coef_summary[i,2:3])
   }
 rownames(coef_summary) <- ylabs
-colnames(coef_summary) <- c('pedal','motor','sum')
+colnames(coef_summary) <- c('intercept','pedal','motor','sum')
 coef_summary
 ```
+
 
 Urban:
 
