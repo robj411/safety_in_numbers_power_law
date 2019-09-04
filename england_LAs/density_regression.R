@@ -1,5 +1,3 @@
-library(magrittr)
-library(ISwR)
 library(rstan)
 library(parallel)
 library(tableone)
@@ -19,7 +17,7 @@ fileName <- "./density_regression.stan"
 stan_code <- readChar(fileName, file.info(fileName)$size)
 options(mc.cores = parallel::detectCores())
 
-for(set in c(1,3))
+for(set in c(1,2,3))
   for(lab in c('','_ksi','_fatal')){
     ## Run glm
     glm1 <- glm(formula = whw_ksi_bike ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)),
