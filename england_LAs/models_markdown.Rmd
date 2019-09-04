@@ -1,5 +1,5 @@
 ---
-title: "Road traffic injuries: regression and power law"
+title: "Road traffic injuries: data and regression models"
 output: html_document
 ---
 
@@ -9,7 +9,7 @@ library(stringr)
 library(dplyr)
 setwd('~/overflow_dropbox/safety_in_numbers_power_law/england_LAs/')
 
-summary_counts <- readRDS('data/england_power_law_data.Rds')
+summary_counts <- readRDS('data/england_models_all_data.Rds')
 
 car_mod <- glm(log(Car)~log(Pedal.Cycles),data=summary_counts)
 summary_counts$logcarpred <- car_mod$fitted.values
