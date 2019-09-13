@@ -1,5 +1,7 @@
 library(stringr)
 library(dplyr)
+library(gam)
+library(readODS)
 setwd('~/overflow_dropbox/safety_in_numbers_power_law/england_LAs/')
 
 summary_counts <- readRDS('data/england_models_all_data.Rds')
