@@ -8,4 +8,3 @@ The key questions are:
 * How do we test it, and 
 * how do we interpret it? 
 
-Interested statisticians/modellers are invited to contribute to the work, as described in the pdf.
