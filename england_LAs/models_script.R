@@ -187,9 +187,9 @@ summary(model)
 plot(log(non_london$whw_ksi_bike),log(model$fitted.values))
 
 long_form <- list()
-long_form[[1]] <- summary_counts[,c(1,2,4,13,20,22,30,32)]
-long_form[[2]] <- summary_counts[,c(1,2,4,15,20,22,30,32)]
-long_form[[3]] <- summary_counts[,c(1,2,4,17,20,22,30,32)]
+long_form[[1]] <- summary_counts[,c(1,2,4,13,21,23,35)]
+long_form[[2]] <- summary_counts[,c(1,2,4,15,21,23,35)]
+long_form[[3]] <- summary_counts[,c(1,2,4,17,21,23,35)]
 for(i in 1:3) names(long_form[[i]])[4] <- 'injuries'
 long_form[[1]]$severity <- 'slight'
 long_form[[2]]$severity <- 'serious'
@@ -266,7 +266,7 @@ text(subset(summary_counts,Year==2011&LA_Name=='Cambridgeshire')$LA_Name,
 superset <- summary_counts
 
 
-london <- subset(superset, region=='London')
+london <- subset(superset, Region_Name=='London')
 
 plot(log(subset(superset,Year==2011)$cyclist_density),log(subset(superset,Year==2011)$whw_bike))
 plot(log(london$Pedal.Cycles),log(london$whw_bike)-log(london$Pedal.Cycles),
@@ -403,14 +403,15 @@ xvals<-1:30
   print(model$coefficients[2])
   #text(x=1.05*min(log(subsum[[off]])),y=0.9*max(log(subsum[[type]])),round(1+model$coefficients[2],2),col='navyblue',cex=1.5)
 }
-{x11(height=2.5); par(mfrow=c(1,3),mar=c(5,5,2,2))
+{pdf('outputs/county_linearity.pdf',height=2.5); par(mfrow=c(1,3),mar=c(5,5,2,2))
   plot(log(subset(non_london,Year==2011)$population),log(subset(non_london,Year==2011)$whw_ksi_bike),pch=16,col='grey',
        frame=F,xlab='log(population)',ylab='log(bike KSI)',cex.lab=1.5,cex.axis=1.5)
   plot(log(subset(non_london,Year==2011)$population),log(subset(non_london,Year==2011)$Car),pch=16,col='grey',
        frame=F,xlab='log(population)',ylab='log(car distance)',cex.lab=1.5,cex.axis=1.5)
   plot(log(subset(non_london,Year==2011)$population),log(subset(non_london,Year==2011)$Pedal.Cycles),pch=16,col='grey',
        frame=F,xlab='log(population)',ylab='log(bike distance)',cex.lab=1.5,cex.axis=1.5)
-}
+dev.off()
+  }
 glm(whw_ksi_bike~log(population),family=poisson,data=subset(non_london,Year==2011))
 glm(whw_ksi_bike~log(Pedal.Cycles)+log(Car),family=poisson,data=subset(non_london,Year==2011))
 

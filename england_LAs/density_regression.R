@@ -17,7 +17,9 @@ fileName <- "./density_regression.stan"
 stan_code <- readChar(fileName, file.info(fileName)$size)
 options(mc.cores = parallel::detectCores())
 
-for(set in c(1,2,3))
+results_list <- list()
+for(set in c(1,2,3)){
+  results_list[[set]] <- list()
   for(lab in c('','_ksi','_fatal')){
     ## Run glm
     glm1 <- glm(formula = whw_ksi_bike ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)),
@@ -38,7 +40,7 @@ for(set in c(1,2,3))
     
     ## Run stan
     resStan <- stan(model_code = stan_code, data = dat,
-                    chains = 3, iter = 3000, warmup = 500, thin = 10)
+                    chains = 3, iter = 4000, warmup = 1000, thin = 10)
     
     ## Show traceplot
     traceplot(resStan, pars = c("beta"), inc_warmup = TRUE)
@@ -49,12 +51,31 @@ for(set in c(1,2,3))
     print(c(names(datasets)[set],lab))
     ## Bayesian
     print(resStan, pars = c("beta","beta_sum"))
+    results_list[[set]][[paste0('whw',lab,'_bike')]] <- summary(resStan, pars = c("beta","beta_sum"), probs=c(0.025,0.975))$summary
   }
+}
 
+rowlabels <- c('All','Urban','Rural')
+for(row in c(4,2,3,1))
+  for(set in c(1,2,3)){
+    cat(paste0(rowlabels[set],' areas & '))
+    for(lab in c('','_ksi','_fatal')){
+      toprint <- results_list[[set]][[paste0('whw',lab,'_bike')]]
+      cat(paste0(sprintf('%.2f',toprint[row,4]),'--{}',sprintf('%.2f',toprint[row,5])))
+      if(lab=='_fatal'){
+        cat(' \\\\ \n')
+      }else{
+        cat(' & ')
+      }
+    }
+  }
+          
 
-long_all <- summary_counts[,c(1,2,3,4,13,20,22,36,40)]
-long_ksi <- summary_counts[,c(1,2,3,4,15,20,22,36,40)]
-long_fatal <- summary_counts[,c(1,2,3,4,17,20,22,36,40)]
+#####################################################
+
+long_all <- summary_counts[,c(1,2,3,4,13,21,23,29,33)]
+long_ksi <- summary_counts[,c(1,2,3,4,15,21,23,29,33)]
+long_fatal <- summary_counts[,c(1,2,3,4,17,21,23,29,33)]
 long_all$severity <- 'slight'
 long_ksi$severity <- 'serious'
 long_fatal$severity <- 'fatal'
@@ -86,7 +107,7 @@ stan_code <- readChar(fileName, file.info(fileName)$size)
 
 ## Run stan
 resStan <- stan(model_code = stan_code, data = dat,
-                chains = 3, iter = 3000, warmup = 500, thin = 10)
+                chains = 3, iter = 4000, warmup = 1000, thin = 10)
 
 ## Show traceplot
 traceplot(resStan, pars = c("beta"), inc_warmup = TRUE)
