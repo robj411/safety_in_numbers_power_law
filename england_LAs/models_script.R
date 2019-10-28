@@ -10,6 +10,7 @@ model <- glm(count~log(I(dens*population/total_travel)),data=subset(summary_coun
 summary(model)
 model <- glm(count~log(population),data=subset(summary_counts,Year==2011),family=poisson(),offset=log(population))
 summary(model)
+summary(glm(whw_ksi_bike~log(population),data=subset(summary_counts,Year==2011&Region_Name!='London'),family=poisson(),offset=log(population)))
 model <- glm(nov~log(population),data=subset(summary_counts,Year==2011),family=poisson(),offset=log(population))
 summary(model)
 model <- glm(count~log(total_travel),data=summary_counts,family=poisson(),offset=log(total_travel))
@@ -412,8 +413,8 @@ xvals<-1:30
        frame=F,xlab='log(population)',ylab='log(bike distance)',cex.lab=1.5,cex.axis=1.5)
 dev.off()
   }
-glm(whw_ksi_bike~log(population),family=poisson,data=subset(non_london,Year==2011))
-glm(whw_ksi_bike~log(Pedal.Cycles)+log(Car),family=poisson,data=subset(non_london,Year==2011))
+summary(glm(whw_ksi_bike~log(population),family=poisson,data=subset(non_london,Year==2011)))
+summary(glm(whw_ksi_bike~log(Pedal.Cycles)+log(Car),family=poisson,data=subset(non_london,Year==2011)))
 
 library(latex2exp)
 beta_1<-c(0.52,0.76,0.29,0.36,0.4,0.73,0.5,0.27,0.32,0.62,0.55,0.64,0.58,0.35); 

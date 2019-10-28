@@ -22,17 +22,17 @@ la_map <- readRDS('data/la_map.Rds')
 
 regions <- levels(ssg.reg.base$region)
 modes <- levels(ssg.reg.base$strike_mode)
-ssg.la.base$cas_distance <- ssg.la.base$cas_distance*1e-9
-ssg.la.base$strike_distance <- ssg.la.base$strike_distance*1e-9
-ssg.reg.base$cas_distance <- ssg.reg.base$cas_distance*1e-9
-ssg.reg.base$strike_distance <- ssg.reg.base$strike_distance*1e-9
+#ssg.la.base$cas_distance <- ssg.la.base$cas_distance*1e-9
+#ssg.la.base$strike_distance <- ssg.la.base$strike_distance*1e-9
+#ssg.reg.base$cas_distance <- ssg.reg.base$cas_distance*1e-9
+#ssg.reg.base$strike_distance <- ssg.reg.base$strike_distance*1e-9
 
 true_count <- pred_count <- pred_count_corrected <- cas_sin <- str_sin <- matrix(0,nrow=length(regions),ncol=length(modes)); 
 betas <- betas3 <- matrix(0,ncol=2,nrow=length(modes))
 country_pred <- matrix(0,ncol=3,nrow=length(modes)); 
 sev <- c('Fatal','Serious')
 intercepts <- list()
-{x11(width=9,height=6); par(mfrow=c(2,3),mar=c(5,5,0.5,0.5))
+{pdf('englandParameters.pdf',width=9,height=6); par(mfrow=c(2,3),mar=c(5,5,0.5,0.5))
 for(vehicle in 1:length(modes)){
   intercepts[[vehicle]] <- list()
   coefs <- matrix(0,ncol=2,nrow=length(regions))
@@ -118,11 +118,12 @@ for(vehicle in 1:length(modes)){
   lines(x=rep(coefs_meso[1,1],2),y=coefs_meso[1,2]+c(se.coefs_meso[1,2],-se.coefs_meso[1,2]),col='darkorange')
   lines(y=rep(coefs_meso[2,2],2),x=coefs_meso[2,1]+c(se.coefs_meso[2,1],-se.coefs_meso[2,1]),col='turquoise')
   lines(x=rep(coefs_meso[2,1],2),y=coefs_meso[2,2]+c(se.coefs_meso[2,2],-se.coefs_meso[2,2]),col='turquoise')
-  lines(x=c(-5,6),y=c(6,-5),lty=2)
+  if(vehicle!=1) lines(x=c(-5,6),y=c(6,-5),lty=2)
   abline(h=1,lty=2); abline(v=1,lty=2)
-  if(vehicle==1) legend(x=-0.5,y=-40,bty='n',legend=c('Regions','Pooled','Summed'),col=c('black','darkorange','turquoise'),pch=c(1,20,20),cex=1.25)
+  if(vehicle==1) legend(x=-0.8,y=-40,bty='n',legend=c('Regions','Pooled','Summed'),col=c('black','darkorange','turquoise'),pch=c(1,20,20),cex=1.25)
 }
 }
+dev.off()
 
 {betas[1,] <- betas[1,]/2
 x11(width=9);par(mar=c(5,5,1,1),fig = c(0,1,0,1));

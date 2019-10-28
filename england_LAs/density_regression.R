@@ -73,9 +73,9 @@ for(row in c(4,2,3,1))
 
 #####################################################
 
-long_all <- summary_counts[,c(1,2,3,4,13,21,23,29,33)]
-long_ksi <- summary_counts[,c(1,2,3,4,15,21,23,29,33)]
-long_fatal <- summary_counts[,c(1,2,3,4,17,21,23,29,33)]
+long_all <- summary_counts[,c(1,2,3,4,13,21,23,35,39)]
+long_ksi <- summary_counts[,c(1,2,3,4,15,21,23,35,39)]
+long_fatal <- summary_counts[,c(1,2,3,4,17,21,23,35,39)]
 long_all$severity <- 'slight'
 long_ksi$severity <- 'serious'
 long_fatal$severity <- 'fatal'
