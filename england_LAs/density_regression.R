@@ -74,7 +74,7 @@ for(row in c(4,2,3,1))
 #####################################################
 
 long_form <- list()
-keep_names <- c('LA_Name','Year','population','Pedal.Cycles','Car','AB')
+keep_names <- c('LA_Name','Year','population','Pedal.Cycles','Car','AB','ruralpercent')
 long_form[[1]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_bike_car')]
 long_form[[2]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_ksi_bike_car')]
 long_form[[3]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_fatal_bike_car')]
@@ -87,7 +87,7 @@ long_form[[2]]$injuries <- long_form[[2]]$injuries - long_form[[3]]$injuries
 all_data <- do.call('rbind',long_form)
 all_data$urban <- all_data$ruralpercent < 0.01
 ## Run glm
-glm1 <- glm(formula = count ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)) + severity + urban,
+glm1 <- glm(formula = injuries ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)) + severity + urban,
             family  = poisson(link = "log"),
             data    = all_data)
 summary(glm1)
@@ -101,7 +101,7 @@ dat   <- as.list(modMat)
 dat$N <- nrow(modMat)
 dat$p <- ncol(modMat) - 1
 
-dat$y <- all_data$count
+dat$y <- all_data$injuries
 
 ## Load model
 fileName <- "./density_regression_long.stan"
