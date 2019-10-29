@@ -22,7 +22,7 @@ for(set in c(1,2,3)){
   results_list[[set]] <- list()
   for(lab in c('','_ksi','_fatal')){
     ## Run glm
-    glm1 <- glm(formula = whw_ksi_bike ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)),
+    glm1 <- glm(formula = whw_ksi_bike_car ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)),
                 family  = poisson(link = "log"),
                 data    = datasets[[set]])
     summary(glm1)
@@ -36,7 +36,7 @@ for(set in c(1,2,3)){
     dat$N <- nrow(modMat)
     dat$p <- ncol(modMat) - 1
     
-    dat$y <- datasets[[set]][[paste0('whw',lab,'_bike')]]
+    dat$y <- datasets[[set]][[paste0('whw',lab,'_bike_car')]]
     
     ## Run stan
     resStan <- stan(model_code = stan_code, data = dat,
@@ -73,16 +73,18 @@ for(row in c(4,2,3,1))
 
 #####################################################
 
-long_all <- summary_counts[,c(1,2,3,4,13,21,23,35,39)]
-long_ksi <- summary_counts[,c(1,2,3,4,15,21,23,35,39)]
-long_fatal <- summary_counts[,c(1,2,3,4,17,21,23,35,39)]
-long_all$severity <- 'slight'
-long_ksi$severity <- 'serious'
-long_fatal$severity <- 'fatal'
-names(long_all)[5] <- names(long_ksi)[5] <- names(long_fatal)[5] <- 'count'
-long_all$count <- long_all$count - long_ksi$count
-long_ksi$count <- long_ksi$count - long_fatal$count
-all_data <- rbind(long_all,long_ksi,long_fatal)
+long_form <- list()
+keep_names <- c('LA_Name','Year','population','Pedal.Cycles','Car','AB')
+long_form[[1]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_bike_car')]
+long_form[[2]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_ksi_bike_car')]
+long_form[[3]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_fatal_bike_car')]
+for(i in 1:3) names(long_form[[i]])[which(!colnames(long_form[[i]])%in%keep_names)] <- 'injuries'
+long_form[[1]]$severity <- 'slight'
+long_form[[2]]$severity <- 'serious'
+long_form[[3]]$severity <- 'fatal'
+long_form[[1]]$injuries <- long_form[[1]]$injuries - long_form[[2]]$injuries
+long_form[[2]]$injuries <- long_form[[2]]$injuries - long_form[[3]]$injuries
+all_data <- do.call('rbind',long_form)
 all_data$urban <- all_data$ruralpercent < 0.01
 ## Run glm
 glm1 <- glm(formula = count ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)) + severity + urban,

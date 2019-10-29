@@ -10,7 +10,7 @@ model <- glm(count~log(I(dens*population/total_travel)),data=subset(summary_coun
 summary(model)
 model <- glm(count~log(population),data=subset(summary_counts,Year==2011),family=poisson(),offset=log(population))
 summary(model)
-summary(glm(whw_ksi_bike~log(population),data=subset(summary_counts,Year==2011&Region_Name!='London'),family=poisson(),offset=log(population)))
+summary(glm(whw_ksi_bike_car~log(population),data=subset(summary_counts,Year==2011&Region_Name!='London'),family=poisson(),offset=log(population)))
 model <- glm(nov~log(population),data=subset(summary_counts,Year==2011),family=poisson(),offset=log(population))
 summary(model)
 model <- glm(count~log(total_travel),data=summary_counts,family=poisson(),offset=log(total_travel))
@@ -94,7 +94,7 @@ j <- k <- i <- 1
 {x11(height=3,width=8); par(mfrow=c(1,3),mar=c(5,5,2,2))
   lab_extension <- c('log(injuries)','log(KSI)','log(fatalities)')
   for(k in 1:3){
-    type <- paste0(c('whw','nov')[i],extension[k],'_bike')
+    type <- paste0(c('whw','nov')[i],extension[k],'_bike_car')
     off <- c('Pedal.Cycles','total_travel','population')[j]
     form <- paste0(type,'~log(',off,')')
     subsum <- subset(summary_counts,!PD)
@@ -174,24 +174,25 @@ for(i in 1:3) for(j in 1:4){
 }
 summary(model)
 
-model <- glm(whw_ksi_bike~log(Pedal.Cycles),data=subset(summary_counts,count>10),family=poisson())
+model <- glm(whw_ksi_bike_car~log(Pedal.Cycles),data=subset(summary_counts,count>10),family=poisson())
 summary(model)
-model <- glm(whw_ksi_bike~log(Pedal.Cycles)+logcarresidual,data=non_london,family=poisson(),offset=log(Pedal.Cycles))
+model <- glm(whw_ksi_bike_car~log(Pedal.Cycles)+logcarresidual,data=non_london,family=poisson(),offset=log(Pedal.Cycles))
 summary(model)
 plot(log(non_london$whw_ksi_bike),log(model$fitted.values))
 plot((non_london$whw_ksi_bike),(model$fitted.values))
 plot(log(non_london$Pedal.Cycles),log(non_london$whw_bike/non_london$Pedal.Cycles))
 plot(log(non_london$Pedal.Cycles),log(non_london$whw_ksi_bike/non_london$Pedal.Cycles))
 plot(log(non_london$Pedal.Cycles),log(non_london$whw_fatal_bike/non_london$Pedal.Cycles))
-model <- glm(whw_ksi_bike~log(Pedal.Cycles)+LA_Name,data=non_london,family=poisson(),offset=log(Pedal.Cycles))
+model <- glm(whw_ksi_bike_car~log(Pedal.Cycles)+LA_Name,data=non_london,family=poisson(),offset=log(Pedal.Cycles))
 summary(model)
 plot(log(non_london$whw_ksi_bike),log(model$fitted.values))
 
 long_form <- list()
-long_form[[1]] <- summary_counts[,c(1,2,4,13,21,23,35)]
-long_form[[2]] <- summary_counts[,c(1,2,4,15,21,23,35)]
-long_form[[3]] <- summary_counts[,c(1,2,4,17,21,23,35)]
-for(i in 1:3) names(long_form[[i]])[4] <- 'injuries'
+keep_names <- c('LA_Name','Year','population','Pedal.Cycles','Car','AB')
+long_form[[1]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_bike_car')]
+long_form[[2]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_ksi_bike_car')]
+long_form[[3]] <- summary_counts[,colnames(summary_counts)%in%c(keep_names,'whw_fatal_bike_car')]
+for(i in 1:3) names(long_form[[i]])[which(!colnames(long_form[[i]])%in%keep_names)] <- 'injuries'
 long_form[[1]]$severity <- 'slight'
 long_form[[2]]$severity <- 'serious'
 long_form[[3]]$severity <- 'fatal'
@@ -405,7 +406,7 @@ xvals<-1:30
   #text(x=1.05*min(log(subsum[[off]])),y=0.9*max(log(subsum[[type]])),round(1+model$coefficients[2],2),col='navyblue',cex=1.5)
 }
 {pdf('outputs/county_linearity.pdf',height=2.5); par(mfrow=c(1,3),mar=c(5,5,2,2))
-  plot(log(subset(non_london,Year==2011)$population),log(subset(non_london,Year==2011)$whw_ksi_bike),pch=16,col='grey',
+  plot(log(subset(non_london,Year==2011)$population),log(subset(non_london,Year==2011)$whw_ksi_bike_car),pch=16,col='grey',
        frame=F,xlab='log(population)',ylab='log(bike KSI)',cex.lab=1.5,cex.axis=1.5)
   plot(log(subset(non_london,Year==2011)$population),log(subset(non_london,Year==2011)$Car),pch=16,col='grey',
        frame=F,xlab='log(population)',ylab='log(car distance)',cex.lab=1.5,cex.axis=1.5)
@@ -413,8 +414,8 @@ xvals<-1:30
        frame=F,xlab='log(population)',ylab='log(bike distance)',cex.lab=1.5,cex.axis=1.5)
 dev.off()
   }
-summary(glm(whw_ksi_bike~log(population),family=poisson,data=subset(non_london,Year==2011)))
-summary(glm(whw_ksi_bike~log(Pedal.Cycles)+log(Car),family=poisson,data=subset(non_london,Year==2011)))
+summary(glm(whw_ksi_bike_car~log(population),family=poisson,data=subset(non_london,Year==2011)))
+summary(glm(whw_ksi_bike_car~log(Pedal.Cycles)+log(Car),family=poisson,data=subset(non_london,Year==2011)))
 
 library(latex2exp)
 beta_1<-c(0.52,0.76,0.29,0.36,0.4,0.73,0.5,0.27,0.32,0.62,0.55,0.64,0.58,0.35); 

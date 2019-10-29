@@ -19,7 +19,7 @@ rural_percent_threshold <- 0.02
 urban <- subset(summary_counts,ruralpercent<rural_percent_threshold)
 rural <- subset(summary_counts,ruralpercent>=rural_percent_threshold)
 datasets <- list(all=summary_counts,urban=urban,rural=rural)
-inj_cols <- c('whw_bike','whw_ksi_bike','whw_fatal_bike')
+inj_cols <- c('whw_bike_car','whw_ksi_bike_car','whw_fatal_bike_car')
 ylabs <- c('injuries','KSI','fatalities')
 hist(summary_counts$ruralpercent,breaks=50)
 ```
