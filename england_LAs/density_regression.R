@@ -17,9 +17,9 @@ fileName <- "./density_regression.stan"
 stan_code <- readChar(fileName, file.info(fileName)$size)
 options(mc.cores = parallel::detectCores())
 
-results_list <- list()
+results_list <- prob_list <- list()
 for(set in c(1,2,3)){
-  results_list[[set]] <- list()
+  results_list[[set]] <- prob_list[[set]] <- list()
   for(lab in c('','_ksi','_fatal')){
     ## Run glm
     glm1 <- glm(formula = whw_ksi_bike_car ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)),
@@ -52,6 +52,8 @@ for(set in c(1,2,3)){
     ## Bayesian
     print(resStan, pars = c("beta","beta_sum"))
     results_list[[set]][[paste0('whw',lab,'_bike')]] <- summary(resStan, pars = c("beta","beta_sum"), probs=c(0.025,0.975))$summary
+    tab <- do.call(cbind,extract(resStan, pars = c("beta","beta_sum"), permuted = TRUE, inc_warmup = FALSE,include = TRUE))
+    prob_list[[set]][[paste0('whw',lab,'_bike')]] <- sapply(1:4,function(x)sum(tab[,x]<c(1,1,1,2)[x])/nrow(tab))
   }
 }
 
@@ -62,6 +64,8 @@ for(row in c(4,2,3,1))
     for(lab in c('','_ksi','_fatal')){
       toprint <- results_list[[set]][[paste0('whw',lab,'_bike')]]
       cat(paste0(sprintf('%.2f',toprint[row,4]),'--{}',sprintf('%.2f',toprint[row,5])))
+      if(row>1)
+        cat(paste0(sprintf(' & %.2f',prob_list[[set]][[paste0('whw',lab,'_bike')]][row])))
       if(lab=='_fatal'){
         cat(' \\\\ \n')
       }else{
