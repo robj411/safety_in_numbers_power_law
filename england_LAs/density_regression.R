@@ -89,37 +89,71 @@ long_form[[3]]$severity <- 'fatal'
 long_form[[1]]$injuries <- long_form[[1]]$injuries - long_form[[2]]$injuries
 long_form[[2]]$injuries <- long_form[[2]]$injuries - long_form[[3]]$injuries
 all_data <- do.call('rbind',long_form)
-all_data$urban <- all_data$ruralpercent < 0.01
-## Run glm
-glm1 <- glm(formula = injuries ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)) + severity + urban,
-            family  = poisson(link = "log"),
-            data    = all_data)
-summary(glm1)
+all_data$urban <- all_data$ruralpercent < rural_percent_threshold
 
-## Get model matrix
-modMat <- as.data.frame(model.matrix(glm1))
-modMat$offset <- -log(all_data$AB)
-names(modMat) <- c("intercept", "cycle", "motor", "serious", "slight", "urban", "offset")
 
-dat   <- as.list(modMat)
-dat$N <- nrow(modMat)
-dat$p <- ncol(modMat) - 1
+for(i in 1:4){
+  test_data <- all_data
+  if(i==1){
+    test_data$urban <- 0
+  }else if(i==2){
+    test_data <- subset(all_data,urban==1)
+  }else if(i==3){
+    test_data <- subset(all_data,urban==0)
+  }
+  ## Run glm
+  glm1 <- glm(formula = injuries ~ log(Pedal.Cycles)+log(Car) + offset(-log(AB)) + severity + urban,
+              family  = poisson(link = "log"),
+              data    = test_data)
+  summary(glm1)
+  
+  ## Get model matrix
+  modMat <- as.data.frame(model.matrix(glm1))
+  modMat$offset <- -log(test_data$AB)
+  names(modMat) <- c("intercept", "cycle", "motor", "serious", "slight", "urban", "offset")
+  
+  dat   <- as.list(modMat)
+  dat$N <- nrow(modMat)
+  dat$p <- ncol(modMat) - 1
+  
+  dat$y <- test_data$injuries
+  
+  ## Load model
+  fileName <- "./density_regression_long.stan"
+  stan_code <- readChar(fileName, file.info(fileName)$size)
+  
+  ## Run stan
+  resStan <- stan(model_code = stan_code, data = dat,
+                  chains = 3, iter = 4000, warmup = 1000, thin = 10)
+  
+  ## Show traceplot
+  traceplot(resStan, pars = c("beta"), inc_warmup = TRUE)
+  
+  ## Frequentist
+  tableone::ShowRegTable(glm1, exp = FALSE)
+  
+  ## Bayesian
+  print(resStan, pars = c("beta","beta_sum"))
+  
+  results_list[[i]] <- summary(resStan, pars = c("beta","beta_sum"), probs=c(0.025,0.975))$summary
+  tab <- do.call(cbind,extract(resStan, pars = c("beta","beta_sum"), permuted = TRUE, inc_warmup = FALSE,include = TRUE))
+  prob_list[[i]] <- sapply(1:3,function(x)sum(tab[,c(2,3,7)[x]]<c(1,1,2)[x])/nrow(tab))
+  
+}
 
-dat$y <- all_data$injuries
-
-## Load model
-fileName <- "./density_regression_long.stan"
-stan_code <- readChar(fileName, file.info(fileName)$size)
-
-## Run stan
-resStan <- stan(model_code = stan_code, data = dat,
-                chains = 3, iter = 4000, warmup = 1000, thin = 10)
-
-## Show traceplot
-traceplot(resStan, pars = c("beta"), inc_warmup = TRUE)
-
-## Frequentist
-tableone::ShowRegTable(glm1, exp = FALSE)
-
-## Bayesian
-print(resStan, pars = c("beta","beta_sum"))
+rowlabels <- c('All areas','Urban areas','Rural areas','With factor')
+for(set in 1:4){
+  cat(paste0(rowlabels[set],' & '))
+  for(column in c(1,2,3)){
+    toprint <- results_list[[set]]
+    cat(paste0(sprintf('%.2f',toprint[c(2,3,7)[column],4]),'--{}',sprintf('%.2f',toprint[c(2,3,7)[column],5])))
+    #if(column>1)
+      cat(paste0(sprintf(' & %.2f',prob_list[[set]][column])))
+    if(column==3){
+      cat(' \\\\ \n')
+      if(set==3) cat('\\hline \n')
+    }else{
+      cat(' & ')
+    }
+  }
+}
